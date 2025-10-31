@@ -1,0 +1,14 @@
+# Configurações sensíveis
+js/config.js
+
+# Node modules (se usar npm futuramente)
+node_modules/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Arquivos temporários
+*.tmp
+*.log
