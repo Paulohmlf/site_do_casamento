@@ -1,4 +1,7 @@
-// Data do casamento (AJUSTE AQUI PARA SUA DATA!)
+// ========================================
+// CONTADOR REGRESSIVO
+// Data da festa: 15 de Agosto de 2026, 18h00
+// ========================================
 const dataCasamento = new Date('2026-08-15T18:00:00').getTime()
 
 function atualizarContador() {
