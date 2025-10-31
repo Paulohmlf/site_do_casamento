@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RSVP - Paulo & Lêdja</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/rsvp.css">
+</head>
+<body>
+  <section class="rsvp-section">
+    <div class="container">
+      <div class="rsvp-header">
+        <h1>Confirme sua Presença</h1>
+        <p class="subtitulo">Bem-vindo(a), <span id="nome-usuario"></span>!</p>
+        <button onclick="logout()" class="btn-logout">Sair</button>
+      </div>
+
+      <form id="form-rsvp" class="rsvp-form">
+        
+        <!-- Buscar Família -->
+        <div class="form-group">
+          <label for="buscar-nome">Digite o nome de um membro da sua família *</label>
+          <input type="text" id="buscar-nome" placeholder="Ex: João Silva" required>
+          <button type="button" id="btn-buscar" class="btn btn-secondary">Buscar</button>
+        </div>
+
+        <!-- Lista de Membros da Família (oculto inicialmente) -->
+        <div id="membros-familia" style="display:none;">
+          <h3>Membros da Família <span id="nome-familia"></span>:</h3>
+          <p class="info-text">Marque ✅ para confirmar presença ou ❌ para não confirmar</p>
+          
+          <div id="lista-membros" class="lista-membros">
+            <!-- Membros serão carregados aqui via JavaScript -->
+          </div>
+        </div>
+
+        <!-- Mensagem para os Noivos -->
+        <div class="form-group" id="grupo-mensagem" style="display:none;">
+          <label for="mensagem">Mensagem para Paulo & Lêdja</label>
+          <textarea id="mensagem" name="mensagem" rows="4" 
+                    placeholder="Deixe uma mensagem carinhosa para o casal..."></textarea>
+        </div>
+
+        <!-- Botões -->
+        <div class="form-buttons" id="botoes-confirmacao" style="display:none;">
+          <button type="submit" class="btn btn-primary">Confirmar Presença</button>
+          <a href="index.html" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/rsvp.js"></script>
+</body>
+</html>
