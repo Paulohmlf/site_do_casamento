@@ -1,0 +1,73 @@
+/* ========================================
+   CSS PARA PÁGINAS DE LOGIN/CADASTRO
+   ======================================== */
+
+.auth-section {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #1a2332 0%, #2d3e50 100%);
+}
+
+.auth-container {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  max-width: 450px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.auth-header h1 {
+  color: #1a2332;
+  margin-bottom: 5px;
+}
+
+.auth-header p {
+  color: #d4af37;
+  font-size: 1.1rem;
+}
+
+.auth-form {
+  margin-bottom: 20px;
+}
+
+.btn-block {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.auth-footer {
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.auth-footer p {
+  margin: 10px 0;
+  font-size: 0.9rem;
+}
+
+.auth-footer a {
+  color: #d4af37;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Responsivo */
+@media (max-width: 500px) {
+  .auth-container {
+    padding: 30px 20px;
+  }
+}
