@@ -1,0 +1,225 @@
+/* ========================================
+   CSS ESPECÍFICO PARA LISTA DE PRESENTES
+   ======================================== */
+
+.presentes-section {
+  min-height: 100vh;
+  padding: 60px 20px;
+}
+
+.presentes-section h1 {
+  text-align: center;
+  color: #1a2332;
+  margin-bottom: 10px;
+}
+
+.presentes-section .subtitulo {
+  text-align: center;
+  color: #d4af37;
+  font-size: 1.1rem;
+  margin-bottom: 40px;
+}
+
+/* Filtros */
+.filtros {
+  max-width: 800px;
+  margin: 0 auto 40px;
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.filtros input,
+.filtros select {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.filtros input:focus,
+.filtros select:focus {
+  outline: none;
+  border-color: #d4af37;
+}
+
+/* Grid de Presentes */
+.presentes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.presente-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 2px solid #e0e0e0;
+}
+
+.presente-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+  border-color: #d4af37;
+}
+
+.presente-card.reservado {
+  opacity: 0.7;
+  border-color: #ccc;
+}
+
+.presente-card.reservado:hover {
+  transform: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.presente-imagem {
+  position: relative;
+  height: 200px;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+.presente-imagem img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.badge-reservado {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #4caf50;
+  color: white;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.presente-info {
+  padding: 20px;
+}
+
+.categoria {
+  display: inline-block;
+  background: #1a2332;
+  color: #d4af37;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.presente-info h3 {
+  color: #1a2332;
+  margin: 10px 0;
+  font-size: 1.2rem;
+}
+
+.descricao {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 10px 0;
+  line-height: 1.4;
+}
+
+.preco {
+  color: #d4af37;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin: 15px 0;
+}
+
+.reservado-por {
+  color: #4caf50;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 10px;
+}
+
+.presente-info .btn {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Mensagens de estado */
+.loading,
+.vazio,
+.erro {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.1rem;
+  color: #666;
+}
+
+.erro {
+  color: #f44336;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #999;
+  transition: color 0.3s ease;
+}
+
+.close:hover {
+  color: #333;
+}
+
+.modal-content h2 {
+  color: #1a2332;
+  margin-bottom: 20px;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .presentes-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .filtros {
+    flex-direction: column;
+  }
+  
+  .filtros input,
+  .filtros select {
+    width: 100%;
+  }
+}

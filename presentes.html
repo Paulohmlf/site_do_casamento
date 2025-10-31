@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de Presentes - Paulo & Lêdja</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/presentes.css">
+</head>
+<body>
+  <section class="presentes-section">
+    <div class="container">
+      <h1>Lista de Presentes</h1>
+      <p class="subtitulo">Escolha um presente e reserve para nós!</p>
+
+      <!-- Filtros -->
+      <div class="filtros">
+        <input type="text" id="busca" placeholder="🔍 Buscar presente...">
+        <select id="filtro-categoria">
+          <option value="">Todas as categorias</option>
+          <option value="Cozinha">Cozinha</option>
+          <option value="Banheiro">Banheiro</option>
+          <option value="Lavanderia">Lavanderia</option>
+          <option value="Quarto">Quarto</option>
+          <option value="Eletrodomésticos">Eletrodomésticos</option>
+        </select>
+      </div>
+
+      <!-- Grid de Presentes -->
+      <div id="grid-presentes" class="presentes-grid">
+        <p class="loading">Carregando presentes...</p>
+      </div>
+
+      <a href="index.html" class="btn btn-secondary" style="margin-top: 30px;">Voltar para Início</a>
+    </div>
+  </section>
+
+  <!-- Modal de Reserva -->
+  <div id="modal-reserva" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h2>Reservar Presente</h2>
+      <form id="form-reserva">
+        <input type="hidden" id="presente-id">
+        <div class="form-group">
+          <label>Presente:</label>
+          <p id="presente-nome" style="font-weight: bold; color: #1a2332;"></p>
+        </div>
+        <div class="form-group">
+          <label for="reserva-nome">Seu Nome *</label>
+          <input type="text" id="reserva-nome" required placeholder="Seu nome completo">
+        </div>
+        <div class="form-group">
+          <label for="reserva-email">Seu E-mail *</label>
+          <input type="email" id="reserva-email" required placeholder="seu@email.com">
+        </div>
+        <button type="submit" class="btn btn-primary">Confirmar Reserva</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/presentes.js"></script>
+</body>
+</html>
