@@ -11,7 +11,7 @@ function protegerPagina() {
 
   // Lista de páginas que TODO MUNDO pode ver (sem login)
   // OBS: Se quiser bloquear a lista de presentes também, remova 'presentes.html' daqui.
-  const paginasPublicas = ['login.html', 'cadastro.html', 'presentes.html']
+  const paginasPublicas = ['login.html', 'cadastro.html']
 
   // Verifica se tem usuário salvo
   const usuario = obterUsuarioLogado()
