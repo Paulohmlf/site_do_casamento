@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel Admin - Paulo & Lêdja</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+  
+  <style>
+    /* Tela de Carregamento (O Porteiro) */
+    #loading-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #1a2332;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: #d4af37;
+      z-index: 9999;
+    }
+    
+    /* Conteúdo do Admin (Começa oculto) */
+    #admin-content {
+      display: none; 
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    /* Utilitário para ocultar abas */
+    .aba-view {
+      display: none; /* Todas começam ocultas, o JS ativa a primeira */
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loading-screen">
+    <h2>🔒 Verificando permissões...</h2>
+    <p>Aguarde um momento</p>
+  </div>
+
+  <div id="admin-content">
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+      <div>
+        <h1 style="margin:0; border:none;">Painel de Controle 🤵👰</h1>
+        <p style="margin-top:5px; color:#666;">Olá, <span id="admin-nome" style="font-weight:bold; color:#1a2332;"></span>!</p>
+      </div>
+      <button onclick="logout()" style="background:#f44336; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer; font-weight:bold;">Sair</button>
+    </div>
+
+    <nav class="admin-nav">
+      <button class="nav-btn ativo" onclick="alternarAba('dashboard')">📊 Resumo</button>
+      <button class="nav-btn" onclick="alternarAba('convidados')">👥 Convidados</button>
+      <button class="nav-btn" onclick="alternarAba('presentes')">🎁 Presentes</button>
+      <button class="nav-btn" onclick="alternarAba('mensagens')">💌 Mensagens</button>
+    </nav>
+
+    <div id="view-dashboard" class="aba-view" style="display: block;">
+      <h3 style="margin-bottom:20px;">Resumo Geral</h3>
+      
+      <div class="dashboard-grid">
+        <div class="card card-total">
+          <h3>Total Convidados</h3>
+          <p class="numero" id="total-convidados">0</p>
+        </div>
+
+        <div class="card card-sim">
+          <h3>✅ Confirmados</h3>
+          <p class="numero" id="total-sim">0</p>
+        </div>
+
+        <div class="card card-nao">
+          <h3>❌ Não Vão</h3>
+          <p class="numero" id="total-nao">0</p>
+        </div>
+
+        <div class="card card-pendente">
+          <h3>⏳ Pendentes</h3>
+          <p class="numero" id="total-pendente">0</p>
+        </div>
+
+        <div class="card card-presentes">
+          <h3>🎁 Reservados</h3>
+          <p class="numero" id="total-presentes">0</p>
+          <p class="detalhe" id="msg-presentes">0 de 0 itens</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="view-convidados" class="aba-view">
+      <div class="view-header">
+        <h3>Lista de Convidados</h3>
+        <div class="filtros-admin">
+          <button class="btn-filtro ativo" onclick="filtrarTabela('todos')">Todos</button>
+          <button class="btn-filtro" onclick="filtrarTabela(true)">✅ Sim</button>
+          <button class="btn-filtro" onclick="filtrarTabela(false)">❌ Não</button>
+          <button class="btn-filtro" onclick="filtrarTabela(null)">⏳ Pendentes</button>
+        </div>
+      </div>
+
+      <div class="tabela-container">
+        <table id="tabela-convidados">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Família</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="lista-convidados-body">
+            </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="view-presentes" class="aba-view">
+      <div class="view-header">
+        <h3>Lista de Presentes</h3>
+        <button class="btn-filtro" style="background:#1a2332; color:white; border-color:#1a2332;" onclick="toggleFormPresente()">+ Novo Presente</button>
+      </div>
+
+      <form id="form-novo-presente" class="form-presente">
+        <h4 style="margin-bottom:15px; color:#1a2332;">Adicionar Novo Presente</h4>
+        <div class="grid-inputs">
+          <input type="text" id="pres-nome" placeholder="Nome do Produto (Ex: Cafeteira)" required>
+          
+          <select id="pres-categoria" required>
+            <option value="" disabled selected>Selecione a Categoria</option>
+            <option value="Cozinha">Cozinha</option>
+            <option value="Quarto">Quarto</option>
+            <option value="Banheiro">Banheiro</option>
+            <option value="Eletrodomésticos">Eletrodomésticos</option>
+            <option value="Lavanderia">Lavanderia</option>
+          </select>
+          
+          <input type="number" id="pres-valor" placeholder="Valor (R$)" step="0.01" min="0" required>
+          <input type="url" id="pres-imagem" placeholder="Link da Imagem (URL)" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:auto;">Salvar Presente</button>
+      </form>
+
+      <div id="lista-presentes-admin" class="lista-presentes-admin">
+        </div>
+    </div>
+
+    <div id="view-mensagens" class="aba-view">
+      <div class="view-header">
+        <h3>Mural de Recados</h3>
+      </div>
+
+      <div id="lista-mensagens" class="grid-mensagens">
+        </div>
+    </div>
+
+  </div> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
