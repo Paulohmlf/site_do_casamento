@@ -1,10 +1,9 @@
 // ========================================
-// LÓGICA DO PAINEL ADMIN (VERSÃO FINAL)
+// LÓGICA DO PAINEL ADMIN (FINAL + EDIÇÃO NOME/PREÇO)
 // ========================================
 
 document.addEventListener('DOMContentLoaded', verificarPermissaoAdmin)
 
-// Variável global para armazenar a lista de convidados (para filtragem rápida)
 let listaGlobalConvidados = []
 
 // --- 1. SEGURANÇA E INICIALIZAÇÃO ---
@@ -20,7 +19,6 @@ async function verificarPermissaoAdmin() {
   }
 
   try {
-    // Verificar no banco se é admin mesmo
     const { data: user, error } = await supabase
       .from('usuarios')
       .select('*')
@@ -31,18 +29,16 @@ async function verificarPermissaoAdmin() {
       throw new Error('Usuário não é administrador')
     }
 
-    // ✅ Sucesso: É Admin
     console.log('✅ Acesso permitido para:', user.nome)
     
     document.getElementById('admin-nome').textContent = user.nome
     document.getElementById('loading-screen').style.display = 'none'
     document.getElementById('admin-content').style.display = 'block'
 
-    // Carregar todos os dados iniciais
     carregarDashboard()
     carregarConvidados()
     carregarPresentesAdmin()
-    carregarMensagens() // Carrega o mural de recados
+    carregarMensagens()
 
   } catch (erro) {
     console.error('Erro de permissão:', erro)
@@ -53,23 +49,13 @@ async function verificarPermissaoAdmin() {
 
 // --- 2. NAVEGAÇÃO ENTRE ABAS ---
 function alternarAba(abaNome) {
-  // 1. Esconder todas as abas
-  document.querySelectorAll('.aba-view').forEach(div => {
-    div.style.display = 'none'
-  })
-  
-  // 2. Remover classe 'ativo' de todos os botões
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.classList.remove('ativo')
-  })
+  document.querySelectorAll('.aba-view').forEach(div => div.style.display = 'none')
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('ativo'))
 
-  // 3. Mostrar a aba certa
   const aba = document.getElementById(`view-${abaNome}`)
   if (aba) aba.style.display = 'block'
   
-  // 4. Ativar o botão certo
   const botoes = document.querySelectorAll('.nav-btn')
-  // A ordem dos botões no HTML é: 0=Dashboard, 1=Convidados, 2=Presentes, 3=Mensagens
   if (abaNome === 'dashboard') botoes[0].classList.add('ativo')
   if (abaNome === 'convidados') botoes[1].classList.add('ativo')
   if (abaNome === 'presentes') botoes[2].classList.add('ativo')
@@ -79,7 +65,6 @@ function alternarAba(abaNome) {
 // --- 3. DASHBOARD (RESUMO) ---
 async function carregarDashboard() {
   try {
-    // Buscar Convidados
     const { data: conv } = await supabase.from('convidados').select('confirmado')
     
     if (conv) {
@@ -94,7 +79,6 @@ async function carregarDashboard() {
       document.getElementById('total-pendente').textContent = pendente
     }
 
-    // Buscar Presentes
     const { data: pres } = await supabase.from('presentes').select('reservado')
     
     if (pres) {
@@ -138,7 +122,6 @@ function renderizarTabela(lista) {
     return
   }
 
-  // Criar HTML de cada linha
   const htmlLinhas = lista.map(c => {
     let statusIcon = '⏳ Pendente'
     let statusColor = 'orange'
@@ -169,14 +152,12 @@ function renderizarTabela(lista) {
 }
 
 function filtrarTabela(status) {
-  // Atualizar visual dos botões
   document.querySelectorAll('.filtros-admin .btn-filtro').forEach(btn => btn.classList.remove('ativo'))
   if(event && event.target) event.target.classList.add('ativo')
 
   if (status === 'todos') {
     renderizarTabela(listaGlobalConvidados)
   } else {
-    // status pode ser true, false ou null
     const filtrados = listaGlobalConvidados.filter(c => c.confirmado === status)
     renderizarTabela(filtrados)
   }
@@ -193,15 +174,15 @@ async function resetarPresenca(id) {
 
     if (error) throw error
 
-    carregarConvidados() // Recarrega tabela
-    carregarDashboard()  // Recarrega contadores
+    carregarConvidados()
+    carregarDashboard()
 
   } catch (error) {
     alert('Erro ao resetar: ' + error.message)
   }
 }
 
-// --- 5. GESTÃO DE PRESENTES ---
+// --- 5. GESTÃO DE PRESENTES (ATUALIZADO) ---
 async function carregarPresentesAdmin() {
   try {
     const { data, error } = await supabase
@@ -227,12 +208,26 @@ async function carregarPresentesAdmin() {
         
         <div style="margin: 10px 0; font-size: 0.9rem;">
           ${p.reservado 
-            ? `<span style="color:green">🔒 Reservado por: <b>${p.reservado_por}</b></span>` 
+            ? `<span style="color:green">🔒 Reservado</span>` 
             : `<span style="color:#666">🟢 Disponível</span>`
           }
         </div>
 
-        <button class="btn-excluir" onclick="deletarPresente('${p.id}')">🗑 Excluir</button>
+        <div style="display: flex; gap: 5px; margin-top: 10px;">
+          <button onclick="editarNome('${p.id}', '${p.nome}')" 
+             style="flex: 1; background: #FF9800; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">
+             ✏️ Nome
+          </button>
+          
+          <button onclick="editarPreco('${p.id}', '${p.valor}')" 
+             style="flex: 1; background: #2196F3; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">
+             💲 Preço
+          </button>
+        </div>
+
+        <button class="btn-excluir" onclick="deletarPresente('${p.id}')" style="margin-top: 5px;">
+             🗑 Excluir
+        </button>
       </div>
     `).join('')
 
@@ -271,9 +266,9 @@ if (formPresente) {
 
       alert('🎁 Presente adicionado com sucesso!')
       formPresente.reset()
-      toggleFormPresente() // Esconder formulário
-      carregarPresentesAdmin() // Recarregar lista
-      carregarDashboard()      // Atualizar contadores
+      toggleFormPresente()
+      carregarPresentesAdmin()
+      carregarDashboard()
 
     } catch (error) {
       alert('Erro ao salvar presente: ' + error.message)
@@ -282,6 +277,49 @@ if (formPresente) {
       btnSalvar.disabled = false
     }
   })
+}
+
+// FUNÇÃO: Editar Preço
+async function editarPreco(id, valorAtual) {
+  const novoValor = prompt("Digite o novo valor (Use ponto para centavos, ex: 150.50):", valorAtual)
+  if (novoValor === null || novoValor.trim() === "") return
+
+  const valorFloat = parseFloat(novoValor.replace(',', '.'))
+
+  if (isNaN(valorFloat) || valorFloat < 0) {
+    alert("Por favor, digite um valor válido!")
+    return
+  }
+
+  try {
+    const { error } = await supabase
+      .from('presentes').update({ valor: valorFloat }).eq('id', id)
+
+    if (error) throw error
+    alert("✅ Preço atualizado!")
+    carregarPresentesAdmin()
+
+  } catch (error) {
+    alert("Erro: " + error.message)
+  }
+}
+
+// NOVA FUNÇÃO: Editar Nome
+async function editarNome(id, nomeAtual) {
+  const novoNome = prompt("Digite o novo nome para este presente:", nomeAtual)
+  if (novoNome === null || novoNome.trim() === "") return
+
+  try {
+    const { error } = await supabase
+      .from('presentes').update({ nome: novoNome.trim() }).eq('id', id)
+
+    if (error) throw error
+    alert("✅ Nome atualizado!")
+    carregarPresentesAdmin()
+
+  } catch (error) {
+    alert("Erro: " + error.message)
+  }
 }
 
 async function deletarPresente(id) {
@@ -342,7 +380,7 @@ async function deletarMensagem(id) {
     const { error } = await supabase.from('mensagens').delete().eq('id', id)
     if (error) throw error
     
-    carregarMensagens() // Recarregar lista
+    carregarMensagens()
   } catch (error) {
     alert('Erro ao excluir mensagem.')
   }

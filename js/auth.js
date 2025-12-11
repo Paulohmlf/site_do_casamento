@@ -1,82 +1,43 @@
 // ========================================
-// SISTEMA DE AUTENTICAÇÃO
+// SISTEMA DE AUTENTICAÇÃO E SEGURANÇA
 // ========================================
 
-// Verificar se está na página de cadastro
-if (document.getElementById('form-cadastro')) {
-  document.getElementById('form-cadastro').addEventListener('submit', async function(e) {
-    e.preventDefault()
+// 1. EXECUTA IMEDIATAMENTE AO CARREGAR O ARQUIVO
+protegerPagina()
 
-    const nome = document.getElementById('nome').value.trim()
-    const email = document.getElementById('email').value.trim()
-    const senha = document.getElementById('senha').value
-    const confirmarSenha = document.getElementById('confirmar-senha').value
+function protegerPagina() {
+  const caminhoAtual = window.location.pathname
+  const paginaAtual = caminhoAtual.split('/').pop() // Pega 'index.html', 'login.html', etc.
 
-    // Validações
-    if (!validarEmail(email)) {
-      mostrarErro('Por favor, insira um e-mail válido.')
-      return
+  // Lista de páginas que TODO MUNDO pode ver (sem login)
+  // OBS: Se quiser bloquear a lista de presentes também, remova 'presentes.html' daqui.
+  const paginasPublicas = ['login.html', 'cadastro.html', 'presentes.html']
+
+  // Verifica se tem usuário salvo
+  const usuario = obterUsuarioLogado()
+
+  // --- CENÁRIO 1: USUÁRIO NÃO ESTÁ LOGADO ---
+  if (!usuario) {
+    // Se a página atual NÃO é pública (ou seja, é Index, Admin ou RSVP)...
+    // ... e não é a raiz do site vazia (alguns servidores usam / para index)
+    if (!paginasPublicas.includes(paginaAtual)) {
+      console.log('🔒 Página protegida. Redirecionando para login...')
+      // Salva a página que ele queria ir para voltar depois (opcional, mas útil)
+      sessionStorage.setItem('paginaDestino', paginaAtual || 'index.html')
+      window.location.href = 'login.html'
     }
-
-    if (senha !== confirmarSenha) {
-      mostrarErro('As senhas não coincidem!')
-      return
+  } 
+  
+  // --- CENÁRIO 2: USUÁRIO JÁ ESTÁ LOGADO ---
+  else {
+    // Se ele tentar entrar na tela de Login ou Cadastro, joga ele para dentro do site (Home)
+    if (paginaAtual === 'login.html' || paginaAtual === 'cadastro.html') {
+      window.location.href = 'index.html'
     }
-
-    if (senha.length < 6) {
-      mostrarErro('A senha deve ter no mínimo 6 caracteres.')
-      return
-    }
-
-    const botao = document.querySelector('button[type="submit"]')
-    botao.disabled = true
-    botao.textContent = '⏳ Criando conta...'
-
-    try {
-      // Verificar se email já existe
-      const { data: usuarioExistente } = await supabase
-        .from('usuarios')
-        .select('id')
-        .eq('email', email)
-        .single()
-
-      if (usuarioExistente) {
-        mostrarErro('Este e-mail já está cadastrado. Faça login.')
-        botao.disabled = false
-        botao.textContent = 'Criar Conta'
-        return
-      }
-
-      // Inserir novo usuário (senha em texto simples por enquanto)
-      // TODO: Implementar hash de senha em produção
-      const { data, error } = await supabase
-        .from('usuarios')
-        .insert([{
-          nome: nome,
-          email: email,
-          senha: senha
-        }])
-        .select()
-
-      if (error) throw error
-
-      mostrarSucesso('Conta criada com sucesso! Redirecionando para login...')
-      
-      setTimeout(() => {
-        window.location.href = 'login.html'
-      }, 2000)
-
-    } catch (error) {
-      console.error('Erro ao criar conta:', error)
-      mostrarErro('Erro ao criar conta. Tente novamente.')
-    } finally {
-      botao.disabled = false
-      botao.textContent = 'Criar Conta'
-    }
-  })
+  }
 }
 
-// Verificar se está na página de login
+// 2. LÓGICA DO FORMULÁRIO DE LOGIN
 if (document.getElementById('form-login')) {
   document.getElementById('form-login').addEventListener('submit', async function(e) {
     e.preventDefault()
@@ -94,7 +55,6 @@ if (document.getElementById('form-login')) {
     botao.textContent = '⏳ Entrando...'
 
     try {
-      // Buscar usuário
       const { data: usuario, error } = await supabase
         .from('usuarios')
         .select('*')
@@ -109,43 +69,94 @@ if (document.getElementById('form-login')) {
         return
       }
 
-      // Salvar dados do usuário no localStorage
+      // Salvar sessão
       localStorage.setItem('usuario', JSON.stringify({
         id: usuario.id,
         nome: usuario.nome,
         email: usuario.email
       }))
 
-      mostrarSucesso(`Bem-vindo(a), ${usuario.nome}! Redirecionando...`)
+      mostrarSucesso(`Bem-vindo(a), ${usuario.nome}!`)
       
+      // Verifica se ele estava tentando ir para algum lugar específico
+      const destino = sessionStorage.getItem('paginaDestino') || 'index.html'
+      sessionStorage.removeItem('paginaDestino')
+
       setTimeout(() => {
-        window.location.href = 'rsvp.html'
-      }, 1500)
+        window.location.href = destino
+      }, 1000)
 
     } catch (error) {
-      console.error('Erro ao fazer login:', error)
-      mostrarErro('Erro ao fazer login. Tente novamente.')
-    } finally {
+      console.error('Erro:', error)
+      mostrarErro('Erro ao fazer login.')
       botao.disabled = false
       botao.textContent = 'Entrar'
     }
   })
 }
 
-// Função para verificar se usuário está logado
-function verificarLogin() {
-  const usuario = localStorage.getItem('usuario')
-  if (!usuario) {
-    window.location.href = 'login.html'
-    return null
-  }
-  return JSON.parse(usuario)
+// 3. LÓGICA DO FORMULÁRIO DE CADASTRO
+if (document.getElementById('form-cadastro')) {
+  document.getElementById('form-cadastro').addEventListener('submit', async function(e) {
+    e.preventDefault()
+
+    const nome = document.getElementById('nome').value.trim()
+    const email = document.getElementById('email').value.trim()
+    const senha = document.getElementById('senha').value
+    const confirmarSenha = document.getElementById('confirmar-senha').value
+
+    if (!validarEmail(email)) {
+      mostrarErro('E-mail inválido.')
+      return
+    }
+    if (senha !== confirmarSenha) {
+      mostrarErro('As senhas não coincidem!')
+      return
+    }
+    if (senha.length < 6) {
+      mostrarErro('Senha muito curta (mínimo 6 caracteres).')
+      return
+    }
+
+    const botao = document.querySelector('button[type="submit"]')
+    botao.disabled = true
+    botao.textContent = '⏳ Criando...'
+
+    try {
+      // Verifica duplicidade
+      const { data: jaExiste } = await supabase.from('usuarios').select('id').eq('email', email).single()
+      if (jaExiste) {
+        mostrarErro('Este e-mail já possui cadastro.')
+        botao.disabled = false; botao.textContent = 'Criar Conta'
+        return
+      }
+
+      // Cria usuário
+      const { error } = await supabase.from('usuarios').insert([{ nome, email, senha }])
+      if (error) throw error
+
+      mostrarSucesso('Conta criada com sucesso! Faça login.')
+      setTimeout(() => window.location.href = 'login.html', 1500)
+
+    } catch (err) {
+      console.error(err)
+      mostrarErro('Erro ao criar conta. Tente novamente.')
+      botao.disabled = false; botao.textContent = 'Criar Conta'
+    }
+  })
 }
 
-// Função para fazer logout
+// --- FUNÇÕES AUXILIARES ---
+function obterUsuarioLogado() {
+  const userStr = localStorage.getItem('usuario')
+  return userStr ? JSON.parse(userStr) : null
+}
+
+function verificarLogin() {
+  return obterUsuarioLogado()
+}
+
 function logout() {
   localStorage.removeItem('usuario')
-  window.location.href = 'index.html'
+  window.location.href = 'login.html'
 }
-
-console.log('✅ Sistema de autenticação carregado!')
