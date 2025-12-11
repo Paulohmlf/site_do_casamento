@@ -69,9 +69,11 @@
   border-color: #d4af37;
 }
 
+/* ESTILOS PARA ITENS JÁ RESERVADOS (Lista Múltipla) */
 .presente-card.reservado {
-  opacity: 0.7;
-  border-color: #ccc;
+  opacity: 1; /* Mantém totalmente visível para clicar */
+  background-color: #f9f9f9; /* Fundo cinza claro */
+  border-color: #ddd;
 }
 
 .presente-card.reservado:hover {
@@ -79,6 +81,12 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.presente-card.reservado .presente-imagem img {
+  filter: grayscale(100%); /* Imagem preto e branco */
+  opacity: 0.7;
+}
+
+/* Imagem e Badge */
 .presente-imagem {
   position: relative;
   height: 200px;
@@ -90,18 +98,21 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: all 0.3s;
 }
 
 .badge-reservado {
   position: absolute;
   top: 10px;
   right: 10px;
-  background: #4caf50;
+  background: #607d8b; /* Cinza azulado */
   color: white;
   padding: 5px 12px;
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 600;
+  z-index: 2;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
 }
 
 .presente-info {
@@ -139,16 +150,21 @@
   margin: 15px 0;
 }
 
-.reservado-por {
-  color: #4caf50;
-  font-size: 0.9rem;
-  font-weight: 600;
-  margin-top: 10px;
-}
-
+/* Botão padrão */
 .presente-info .btn {
   width: 100%;
   margin-top: 10px;
+}
+
+/* Botão diferente para itens já reservados */
+.presente-card.reservado .btn-primary {
+  background-color: #607d8b;
+  border-color: #607d8b;
+  color: white;
+}
+
+.presente-card.reservado .btn-primary:hover {
+  background-color: #455a64;
 }
 
 /* Mensagens de estado */

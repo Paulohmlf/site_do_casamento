@@ -1,10 +1,9 @@
 // ========================================
-// LÓGICA DA LISTA DE PRESENTES
+// LÓGICA DA LISTA DE PRESENTES (MÚLTIPLAS RESERVAS)
 // ========================================
 
 let todosPresentes = []
 
-// Carregar presentes ao iniciar
 window.addEventListener('DOMContentLoaded', carregarPresentes)
 
 async function carregarPresentes() {
@@ -12,7 +11,9 @@ async function carregarPresentes() {
     const { data, error } = await supabase
       .from('presentes')
       .select('*')
-      .order('categoria', { ascending: true })
+      // 1. ORDEM: Primeiro os NÃO reservados (false), depois os reservados (true)
+      .order('reservado', { ascending: true })
+      // 2. ORDEM: Dentro dos grupos, ordenar por preço
       .order('valor', { ascending: true })
 
     if (error) throw error
@@ -20,9 +21,9 @@ async function carregarPresentes() {
     todosPresentes = data
     exibirPresentes(data)
   } catch (error) {
-    console.error('Erro ao carregar presentes:', error)
+    console.error('Erro:', error)
     document.getElementById('grid-presentes').innerHTML = 
-      '<p class="erro">Erro ao carregar lista de presentes. Tente novamente mais tarde.</p>'
+      '<p class="erro">Erro ao carregar lista.</p>'
   }
 }
 
@@ -36,34 +37,34 @@ function exibirPresentes(presentes) {
   }
 
   presentes.forEach(presente => {
+    // Definir textos e estilos baseado se já teve alguma reserva
+    const classeCss = presente.reservado ? 'presente-card reservado' : 'presente-card'
+    const textoBotao = presente.reservado ? '🎁 Presentear Também' : '🎁 Reservar'
+    const badge = presente.reservado ? '<span class="badge-reservado">Já ganhou 1+</span>' : ''
+
     const card = document.createElement('div')
-    card.className = `presente-card ${presente.reservado ? 'reservado' : ''}`
+    card.className = classeCss
     card.innerHTML = `
       <div class="presente-imagem">
-        <img src="${presente.imagem_url || 'img/presente-default.jpg'}" 
-             alt="${presente.nome}"
-             onerror="this.src='img/presente-default.jpg'">
-        ${presente.reservado ? '<span class="badge-reservado">✓ Reservado</span>' : ''}
+        <img src="${presente.imagem_url || 'img/presente-default.jpg'}" onerror="this.src='img/presente-default.jpg'">
+        ${badge}
       </div>
       <div class="presente-info">
         <span class="categoria">${presente.categoria}</span>
         <h3>${presente.nome}</h3>
-        <p class="descricao">${presente.descricao || 'Sem descrição'}</p>
+        <p class="descricao">${presente.descricao || 'Item disponível para compra múltipla'}</p>
         <p class="preco">R$ ${presente.valor.toFixed(2)}</p>
-        ${!presente.reservado ? `
-          <button class="btn btn-primary" onclick="abrirModalReserva('${presente.id}', '${presente.nome}')">
-            🎁 Reservar
-          </button>
-        ` : `
-          <p class="reservado-por">Reservado por: ${presente.reservado_por}</p>
-        `}
+        
+        <button class="btn btn-primary" onclick="abrirModalReserva('${presente.id}', '${presente.nome}')">
+          ${textoBotao}
+        </button>
       </div>
     `
     grid.appendChild(card)
   })
 }
 
-// Filtro de busca
+// Filtros
 document.getElementById('busca').addEventListener('input', filtrarPresentes)
 document.getElementById('filtro-categoria').addEventListener('change', filtrarPresentes)
 
@@ -71,36 +72,32 @@ function filtrarPresentes() {
   const busca = document.getElementById('busca').value.toLowerCase()
   const categoria = document.getElementById('filtro-categoria').value
 
-  const filtrados = todosPresentes.filter(presente => {
-    const matchBusca = presente.nome.toLowerCase().includes(busca) || 
-                       (presente.descricao && presente.descricao.toLowerCase().includes(busca))
-    const matchCategoria = !categoria || presente.categoria === categoria
+  const filtrados = todosPresentes.filter(p => {
+    const matchBusca = p.nome.toLowerCase().includes(busca)
+    const matchCategoria = !categoria || p.categoria === categoria
     return matchBusca && matchCategoria
   })
-
   exibirPresentes(filtrados)
 }
 
-// Modal de reserva
+// Modal
 function abrirModalReserva(id, nome) {
   document.getElementById('presente-id').value = id
   document.getElementById('presente-nome').textContent = nome
   document.getElementById('modal-reserva').style.display = 'flex'
 }
 
-document.querySelector('.close').addEventListener('click', function() {
+document.querySelector('.close').addEventListener('click', () => {
   document.getElementById('modal-reserva').style.display = 'none'
 })
 
-// Fechar modal ao clicar fora
-window.addEventListener('click', function(e) {
-  const modal = document.getElementById('modal-reserva')
-  if (e.target === modal) {
-    modal.style.display = 'none'
+window.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-reserva')) {
+    document.getElementById('modal-reserva').style.display = 'none'
   }
 })
 
-// Processar reserva
+// === NOVA LÓGICA DE RESERVA ===
 document.getElementById('form-reserva').addEventListener('submit', async function(e) {
   e.preventDefault()
 
@@ -108,40 +105,40 @@ document.getElementById('form-reserva').addEventListener('submit', async functio
   const nome = document.getElementById('reserva-nome').value.trim()
   const email = document.getElementById('reserva-email').value.trim()
 
-  if (!validarEmail(email)) {
-    mostrarErro('Por favor, insira um e-mail válido.')
-    return
-  }
-
   const botao = document.querySelector('#form-reserva button[type="submit"]')
   botao.disabled = true
-  botao.textContent = '⏳ Reservando...'
+  botao.textContent = '⏳ Processando...'
 
   try {
-    const { data, error } = await supabase
+    // 1. Salvar na nova tabela de RESERVAS (quem comprou)
+    const { error: erroReserva } = await supabase
+      .from('reservas')
+      .insert([{
+        presente_id: presenteId,
+        nome_comprador: nome,
+        email_comprador: email
+      }])
+
+    if (erroReserva) throw erroReserva
+
+    // 2. Atualizar o item para "reservado = true" (para ficar cinza/embaixo)
+    // OBS: Não sobrescrevemos mais o nome aqui, pois usamos a tabela de reservas
+    await supabase
       .from('presentes')
-      .update({
-        reservado: true,
-        reservado_por: nome,
-        email_reserva: email,
-        data_reserva: new Date().toISOString()
-      })
+      .update({ reservado: true }) 
       .eq('id', presenteId)
 
-    if (error) throw error
-
-    mostrarSucesso('Presente reservado com sucesso! Muito obrigado! 🎁')
+    alert('Maravilha! Seu presente foi registrado com sucesso! 🎉')
+    
     document.getElementById('modal-reserva').style.display = 'none'
     document.getElementById('form-reserva').reset()
-    carregarPresentes() // Recarregar lista
+    carregarPresentes() // Recarrega a lista para atualizar a ordem
 
   } catch (error) {
-    console.error('Erro ao reservar presente:', error)
-    mostrarErro('Erro ao reservar presente. Tente novamente.')
+    console.error('Erro:', error)
+    alert('Erro ao reservar. Tente novamente.')
   } finally {
     botao.disabled = false
-    botao.textContent = '🎁 Reservar'
+    botao.textContent = 'Confirmar Reserva'
   }
 })
-
-console.log('✅ Lista de presentes carregada!')
