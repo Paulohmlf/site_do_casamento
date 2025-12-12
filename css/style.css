@@ -1,7 +1,11 @@
 /* =========================================
    SITE DE CASAMENTO - PAULO & LÊDJA
    Cores: Azul Marinho (#1a2332) + Dourado (#d4af37)
+   Fontes: Poppins (Textos) + Pinyon Script (Versículo)
    ========================================= */
+
+/* 1. IMPORTAR FONTES DO GOOGLE */
+@import url('https://fonts.googleapis.com/css2?family=Pinyon+Script&family=Poppins:wght@300;400;600&display=swap');
 
 /* Reset e Base */
 * {
@@ -26,9 +30,9 @@
   --cinza: #e0e0e0;
   --texto-escuro: #333333;
   
-  /* Tipografia */
-  --fonte-principal: 'Georgia', 'Garamond', serif;
-  --fonte-secundaria: 'Arial', sans-serif;
+  /* Tipografia ATUALIZADA */
+  --fonte-principal: 'Poppins', sans-serif;
+  --fonte-secundaria: 'Poppins', sans-serif;
 }
 
 body {
@@ -57,7 +61,7 @@ a {
 }
 
 /* =========================================
-   HERO SECTION
+   SEÇÃO HERO
    ========================================= */
 .hero {
   background: linear-gradient(135deg, var(--azul-marinho) 0%, var(--azul-marinho-claro) 100%);
@@ -109,6 +113,29 @@ a {
   font-size: 1.2rem;
   color: var(--branco);
   opacity: 0.9;
+}
+
+/* ESTILO DO VERSÍCULO (Fonte Manuscrita) */
+.versiculo {
+  font-family: 'Pinyon Script', cursive;
+  font-size: 2rem;
+  color: var(--dourado);
+  margin-top: 30px;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.4;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.versiculo span {
+  display: block;
+  font-size: 1rem;
+  margin-top: 10px;
+  font-family: var(--fonte-principal); /* Referência bíblica volta para Poppins */
+  color: var(--branco);
+  opacity: 0.8;
+  letter-spacing: 1px;
 }
 
 /* =========================================
@@ -357,6 +384,11 @@ footer p {
   
   .hero .data-casamento {
     font-size: 1.2rem;
+  }
+  
+  .versiculo {
+    font-size: 1.5rem;
+    padding: 0 15px;
   }
   
   .countdown {
