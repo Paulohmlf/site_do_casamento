@@ -13,7 +13,6 @@
   <script src="js/auth.js"></script>
   
   <style>
-    /* Tela de Carregamento (O Porteiro) */
     #loading-screen {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -26,7 +25,6 @@
       z-index: 9999;
     }
     
-    /* Conteúdo do Admin (Começa oculto) */
     #admin-content {
       display: none; 
       max-width: 1200px;
@@ -34,9 +32,8 @@
       padding: 20px;
     }
 
-    /* Utilitário para ocultar abas */
     .aba-view {
-      display: none; /* Todas começam ocultas, o JS ativa a primeira */
+      display: none; 
     }
   </style>
 </head>
@@ -61,33 +58,28 @@
       <button class="nav-btn ativo" onclick="alternarAba('dashboard')">📊 Resumo</button>
       <button class="nav-btn" onclick="alternarAba('convidados')">👥 Convidados</button>
       <button class="nav-btn" onclick="alternarAba('presentes')">🎁 Presentes</button>
-      <button class="nav-btn" onclick="alternarAba('mensagens')">💌 Mensagens</button>
+      <button class="nav-btn" onclick="alternarAba('reservas')">📝 Reservas</button> <button class="nav-btn" onclick="alternarAba('mensagens')">💌 Mensagens</button>
     </nav>
 
     <div id="view-dashboard" class="aba-view" style="display: block;">
       <h3 style="margin-bottom:20px;">Resumo Geral</h3>
-      
       <div class="dashboard-grid">
         <div class="card card-total">
           <h3>Total Convidados</h3>
           <p class="numero" id="total-convidados">0</p>
         </div>
-
         <div class="card card-sim">
           <h3>✅ Confirmados</h3>
           <p class="numero" id="total-sim">0</p>
         </div>
-
         <div class="card card-nao">
           <h3>❌ Não Vão</h3>
           <p class="numero" id="total-nao">0</p>
         </div>
-
         <div class="card card-pendente">
           <h3>⏳ Pendentes</h3>
           <p class="numero" id="total-pendente">0</p>
         </div>
-
         <div class="card card-presentes">
           <h3>🎁 Reservados</h3>
           <p class="numero" id="total-presentes">0</p>
@@ -106,7 +98,6 @@
           <button class="btn-filtro" onclick="filtrarTabela(null)">⏳ Pendentes</button>
         </div>
       </div>
-
       <div class="tabela-container">
         <table id="tabela-convidados">
           <thead>
@@ -117,8 +108,7 @@
               <th>Ações</th>
             </tr>
           </thead>
-          <tbody id="lista-convidados-body">
-            </tbody>
+          <tbody id="lista-convidados-body"></tbody>
         </table>
       </div>
     </div>
@@ -128,12 +118,10 @@
         <h3>Lista de Presentes</h3>
         <button class="btn-filtro" style="background:#1a2332; color:white; border-color:#1a2332;" onclick="toggleFormPresente()">+ Novo Presente</button>
       </div>
-
       <form id="form-novo-presente" class="form-presente">
         <h4 style="margin-bottom:15px; color:#1a2332;">Adicionar Novo Presente</h4>
         <div class="grid-inputs">
-          <input type="text" id="pres-nome" placeholder="Nome do Produto (Ex: Cafeteira)" required>
-          
+          <input type="text" id="pres-nome" placeholder="Nome do Produto" required>
           <select id="pres-categoria" required>
             <option value="" disabled selected>Selecione a Categoria</option>
             <option value="Cozinha">Cozinha</option>
@@ -142,27 +130,45 @@
             <option value="Eletrodomésticos">Eletrodomésticos</option>
             <option value="Lavanderia">Lavanderia</option>
           </select>
-          
           <input type="number" id="pres-valor" placeholder="Valor (R$)" step="0.01" min="0" required>
           <input type="url" id="pres-imagem" placeholder="Link da Imagem (URL)" required>
         </div>
         <button type="submit" class="btn btn-primary" style="width:auto;">Salvar Presente</button>
       </form>
+      <div id="lista-presentes-admin" class="lista-presentes-admin"></div>
+    </div>
 
-      <div id="lista-presentes-admin" class="lista-presentes-admin">
-        </div>
+    <div id="view-reservas" class="aba-view">
+      <div class="view-header">
+        <h3>Histórico de Reservas</h3>
+        <p style="font-size: 0.9rem; color: #666;">Veja quem comprou e cancele se necessário.</p>
+      </div>
+      <div class="tabela-container">
+        <table id="tabela-reservas">
+          <thead>
+            <tr>
+              <th>Presente</th>
+              <th>Comprador</th>
+              <th>Data</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody id="lista-reservas-body">
+            </tbody>
+        </table>
+      </div>
     </div>
 
     <div id="view-mensagens" class="aba-view">
       <div class="view-header">
         <h3>Mural de Recados</h3>
       </div>
-
-      <div id="lista-mensagens" class="grid-mensagens">
-        </div>
+      <div id="lista-mensagens" class="grid-mensagens"></div>
     </div>
 
-  </div> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </div> 
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/main.js"></script>
   <script src="js/admin.js"></script>
