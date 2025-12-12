@@ -1,3 +1,7 @@
+// ========================================
+// CONFIGURAÇÕES GERAIS E UTILITÁRIOS
+// ========================================
+
 // Inicializar cliente Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
@@ -24,6 +28,17 @@ function mostrarErro(mensagem) {
 function validarEmail(email) {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return regex.test(email)
+}
+
+// Função de Segurança: Escapar HTML (Evita vírus/scripts no nome)
+function escaparHtml(texto) {
+  if (!texto) return texto;
+  return texto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 // Log de inicialização (para debug)

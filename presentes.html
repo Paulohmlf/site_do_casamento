@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lista de Presentes - Paulo & Lêdja</title>
+  
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/presentes.css">
+
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.supabase.co https://api.qrserver.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'">
 
   <script src="js/auth.js"></script>
 </head>
@@ -70,11 +73,9 @@
           <textarea id="texto-pix" rows="3" style="width: 100%; font-size: 0.8rem; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background: #f9f9f9;" readonly></textarea>
           
           <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
-            
             <button type="button" class="btn btn-secondary" onclick="copiarPix()" style="flex: 1; min-width: 120px;">
               📑 Copiar Código
             </button>
-            
             <a id="btn-ir-banco" href="#" target="_blank" class="btn btn-primary" style="flex: 1; min-width: 120px; display: flex; align-items: center; justify-content: center; text-decoration: none;">
               📱 Abrir App do Banco
             </a>

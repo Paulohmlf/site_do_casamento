@@ -4,8 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel Admin - Paulo & Lêdja</title>
+  
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/admin.css">
+  
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.supabase.co https://api.qrserver.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; script-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'">
+
+  <script src="js/auth.js"></script>
   
   <style>
     /* Tela de Carregamento (O Porteiro) */
@@ -160,7 +165,6 @@
   </div> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/main.js"></script>
-  <script src="js/auth.js"></script>
   <script src="js/admin.js"></script>
 </body>
 </html>
