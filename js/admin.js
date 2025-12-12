@@ -1,5 +1,5 @@
 // ========================================
-// LÓGICA DO PAINEL ADMIN
+// LÓGICA DO PAINEL ADMIN (VERSÃO FINAL)
 // ========================================
 
 document.addEventListener('DOMContentLoaded', verificarPermissaoAdmin)
@@ -10,7 +10,7 @@ let listaGlobalConvidados = []
 async function verificarPermissaoAdmin() {
   console.log('🔒 Iniciando verificação de segurança...')
   
-  const usuarioLocal = verificarLogin()
+  const usuarioLocal = verificarLogin() // Função do auth.js
 
   if (!usuarioLocal) {
     alert('Você precisa estar logado para acessar aqui.')
@@ -38,7 +38,7 @@ async function verificarPermissaoAdmin() {
     carregarDashboard()
     carregarConvidados()
     carregarPresentesAdmin()
-    carregarReservas() // NOVO: Carrega histórico de compras
+    carregarReservas()
     carregarMensagens()
 
   } catch (erro) {
@@ -112,6 +112,7 @@ async function carregarConvidados() {
 
   } catch (error) {
     console.error('Erro ao buscar convidados:', error)
+    alert('Erro ao carregar lista de convidados.')
   }
 }
 
@@ -151,25 +152,45 @@ function filtrarTabela(status) {
   document.querySelectorAll('.filtros-admin .btn-filtro').forEach(btn => btn.classList.remove('ativo'))
   if(event && event.target) event.target.classList.add('ativo')
 
-  if (status === 'todos') renderizarTabela(listaGlobalConvidados)
-  else renderizarTabela(listaGlobalConvidados.filter(c => c.confirmado === status))
+  if (status === 'todos') {
+    renderizarTabela(listaGlobalConvidados)
+  } else {
+    const filtrados = listaGlobalConvidados.filter(c => c.confirmado === status)
+    renderizarTabela(filtrados)
+  }
 }
 
 async function resetarPresenca(id) {
-  if(!confirm('Resetar confirmação para PENDENTE?')) return
+  if(!confirm('Tem certeza que deseja resetar a confirmação deste convidado para PENDENTE?')) return
+
   try {
-    await supabase.from('convidados').update({ confirmado: null, data_confirmacao: null }).eq('id', id)
-    carregarConvidados(); carregarDashboard()
-  } catch (error) { alert('Erro: ' + error.message) }
+    const { error } = await supabase
+      .from('convidados')
+      .update({ confirmado: null, data_confirmacao: null })
+      .eq('id', id)
+
+    if (error) throw error
+
+    carregarConvidados()
+    carregarDashboard()
+
+  } catch (error) {
+    alert('Erro ao resetar: ' + error.message)
+  }
 }
 
 // --- 5. GESTÃO DE PRESENTES ---
 async function carregarPresentesAdmin() {
   try {
-    const { data, error } = await supabase.from('presentes').select('*').order('created_at', { ascending: false })
+    const { data, error } = await supabase
+      .from('presentes')
+      .select('*')
+      .order('created_at', { ascending: false })
+
     if (error) throw error
 
     const container = document.getElementById('lista-presentes-admin')
+    
     if (!data || data.length === 0) {
       container.innerHTML = '<p style="grid-column:1/-1; text-align:center;">Nenhum presente cadastrado.</p>'
       return
@@ -181,17 +202,35 @@ async function carregarPresentesAdmin() {
         <h4>${p.nome}</h4>
         <p class="categoria-badge">${p.categoria}</p>
         <p style="color:#d4af37; font-weight:bold; font-size:1.2rem;">R$ ${p.valor.toFixed(2)}</p>
+        
         <div style="margin: 10px 0; font-size: 0.9rem;">
-          ${p.reservado ? `<span style="color:green">🔒 Reservado</span>` : `<span style="color:#666">🟢 Disponível</span>`}
+          ${p.reservado 
+            ? `<span style="color:green">🔒 Reservado</span>` 
+            : `<span style="color:#666">🟢 Disponível</span>`
+          }
         </div>
+
         <div style="display: flex; gap: 5px; margin-top: 10px;">
-          <button onclick="editarNome('${p.id}', '${p.nome}')" style="flex: 1; background: #FF9800; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">✏️ Nome</button>
-          <button onclick="editarPreco('${p.id}', '${p.valor}')" style="flex: 1; background: #2196F3; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">💲 Preço</button>
+          <button onclick="editarNome('${p.id}', '${p.nome}')" 
+             style="flex: 1; background: #FF9800; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">
+             ✏️ Nome
+          </button>
+          
+          <button onclick="editarPreco('${p.id}', '${p.valor}')" 
+             style="flex: 1; background: #2196F3; color: white; border: none; padding: 8px; border-radius: 4px; cursor: pointer;">
+             💲 Preço
+          </button>
         </div>
-        <button class="btn-excluir" onclick="deletarPresente('${p.id}')" style="margin-top: 5px;">🗑 Excluir</button>
+
+        <button class="btn-excluir" onclick="deletarPresente('${p.id}')" style="margin-top: 5px;">
+             🗑 Excluir
+        </button>
       </div>
     `).join('')
-  } catch (error) { console.error('Erro ao carregar presentes:', error) }
+
+  } catch (error) {
+    console.error('Erro ao carregar presentes:', error)
+  }
 }
 
 function toggleFormPresente() {
@@ -199,50 +238,103 @@ function toggleFormPresente() {
   form.style.display = (form.style.display === 'none' || form.style.display === '') ? 'block' : 'none'
 }
 
-document.getElementById('form-novo-presente')?.addEventListener('submit', async (e) => {
-  e.preventDefault()
-  const btn = e.target.querySelector('button')
-  btn.disabled = true; btn.textContent = 'Salvando...'
-  
-  try {
-    const novo = {
-      nome: document.getElementById('pres-nome').value,
-      categoria: document.getElementById('pres-categoria').value,
-      valor: parseFloat(document.getElementById('pres-valor').value),
-      imagem_url: document.getElementById('pres-imagem').value,
-      reservado: false
-    }
-    await supabase.from('presentes').insert([novo])
-    alert('Presente salvo!'); e.target.reset(); toggleFormPresente()
-    carregarPresentesAdmin(); carregarDashboard()
-  } catch (err) { alert('Erro: ' + err.message) }
-  finally { btn.disabled = false; btn.textContent = 'Salvar Presente' }
-})
+// Salvar novo presente
+const formPresente = document.getElementById('form-novo-presente')
+if (formPresente) {
+  formPresente.addEventListener('submit', async (e) => {
+    e.preventDefault()
+    
+    const btnSalvar = formPresente.querySelector('button[type="submit"]')
+    btnSalvar.textContent = 'Salvando...'
+    btnSalvar.disabled = true
 
-async function editarPreco(id, valor) {
-  const novo = prompt("Novo valor:", valor)
-  if (novo && !isNaN(parseFloat(novo.replace(',', '.')))) {
-    await supabase.from('presentes').update({ valor: parseFloat(novo.replace(',', '.')) }).eq('id', id)
-    alert('Preço atualizado!'); carregarPresentesAdmin()
+    try {
+      const novoPresente = {
+        nome: document.getElementById('pres-nome').value,
+        categoria: document.getElementById('pres-categoria').value,
+        valor: parseFloat(document.getElementById('pres-valor').value),
+        imagem_url: document.getElementById('pres-imagem').value,
+        reservado: false
+      }
+
+      const { error } = await supabase.from('presentes').insert([novoPresente])
+
+      if (error) throw error
+
+      alert('🎁 Presente adicionado com sucesso!')
+      formPresente.reset()
+      toggleFormPresente()
+      carregarPresentesAdmin()
+      carregarDashboard()
+
+    } catch (error) {
+      alert('Erro ao salvar presente: ' + error.message)
+    } finally {
+      btnSalvar.textContent = 'Salvar Presente'
+      btnSalvar.disabled = false
+    }
+  })
+}
+
+// FUNÇÃO: Editar Preço
+async function editarPreco(id, valorAtual) {
+  const novoValor = prompt("Digite o novo valor (Use ponto para centavos, ex: 150.50):", valorAtual)
+  if (novoValor === null || novoValor.trim() === "") return
+
+  const valorFloat = parseFloat(novoValor.replace(',', '.'))
+
+  if (isNaN(valorFloat) || valorFloat < 0) {
+    alert("Por favor, digite um valor válido!")
+    return
+  }
+
+  try {
+    const { error } = await supabase
+      .from('presentes').update({ valor: valorFloat }).eq('id', id)
+
+    if (error) throw error
+    alert("✅ Preço atualizado!")
+    carregarPresentesAdmin()
+
+  } catch (error) {
+    alert("Erro: " + error.message)
   }
 }
 
-async function editarNome(id, nome) {
-  const novo = prompt("Novo nome:", nome)
-  if (novo) {
-    await supabase.from('presentes').update({ nome: novo.trim() }).eq('id', id)
-    alert('Nome atualizado!'); carregarPresentesAdmin()
+// NOVA FUNÇÃO: Editar Nome
+async function editarNome(id, nomeAtual) {
+  const novoNome = prompt("Digite o novo nome para este presente:", nomeAtual)
+  if (novoNome === null || novoNome.trim() === "") return
+
+  try {
+    const { error } = await supabase
+      .from('presentes').update({ nome: novoNome.trim() }).eq('id', id)
+
+    if (error) throw error
+    alert("✅ Nome atualizado!")
+    carregarPresentesAdmin()
+
+  } catch (error) {
+    alert("Erro: " + error.message)
   }
 }
 
 async function deletarPresente(id) {
-  if(confirm('Excluir este presente?')) {
-    await supabase.from('presentes').delete().eq('id', id)
-    carregarPresentesAdmin(); carregarDashboard()
+  if(!confirm('ATENÇÃO: Tem certeza que deseja excluir este presente? Esta ação não pode ser desfeita.')) return
+
+  try {
+    const { error } = await supabase.from('presentes').delete().eq('id', id)
+    if (error) throw error
+
+    carregarPresentesAdmin()
+    carregarDashboard()
+
+  } catch (error) {
+    alert('Erro ao excluir: ' + error.message)
   }
 }
 
-// --- 6. GESTÃO DE RESERVAS (NOVO!) ---
+// --- 6. GESTÃO DE RESERVAS (ROBUSTO) ---
 async function carregarReservas() {
   try {
     const { data, error } = await supabase
@@ -288,37 +380,57 @@ async function carregarReservas() {
 }
 
 async function cancelarReserva(idReserva, idPresente) {
-  if (!confirm('CANCELAR esta reserva? O item poderá voltar a ficar disponível.')) return
+  if (!confirm('Tem certeza que deseja CANCELAR esta reserva?')) return
 
   try {
-    // 1. Apaga a reserva
+    // 1. Apaga a reserva da tabela 'reservas'
     const { error } = await supabase.from('reservas').delete().eq('id', idReserva)
     if (error) throw error
 
-    // 2. Verifica se ainda tem gente comprando esse mesmo item
-    const { data: outras } = await supabase.from('reservas').select('id').eq('presente_id', idPresente)
+    // 2. Verifica se SOBROU alguma reserva para esse mesmo presente
+    const { data: outras } = await supabase
+      .from('reservas')
+      .select('id')
+      .eq('presente_id', idPresente)
 
-    // 3. Se ninguém mais reservou, libera o item
+    // 3. Se NÃO tiver mais ninguém (array vazio ou nulo), libera o item na tabela 'presentes'
     if (!outras || outras.length === 0) {
-      await supabase.from('presentes').update({ reservado: false }).eq('id', idPresente)
+      console.log('Liberando presente ID:', idPresente) // Debug
+      
+      const { error: erroUpdate } = await supabase
+        .from('presentes')
+        .update({ reservado: false }) // Força status para Falso
+        .eq('id', idPresente)
+        
+      if (erroUpdate) throw erroUpdate
     }
 
-    alert('Reserva cancelada!')
-    carregarReservas()
-    carregarDashboard()
-    carregarPresentesAdmin()
+    alert('Reserva cancelada com sucesso!')
+    
+    // 4. Atualiza TODAS as telas
+    carregarReservas()       
+    carregarPresentesAdmin() 
+    carregarDashboard()      
 
   } catch (error) {
+    console.error(error)
     alert('Erro ao cancelar: ' + error.message)
   }
 }
 
-// --- 7. MENSAGENS ---
+// --- 7. MENSAGENS (COM TRATAMENTO DE ERRO) ---
 async function carregarMensagens() {
   try {
-    const { data } = await supabase.from('mensagens').select('*, usuarios(nome)').order('created_at', { ascending: false })
+    const { data } = await supabase
+      .from('mensagens')
+      .select('*, usuarios(nome)')
+      .order('created_at', { ascending: false })
+
     const div = document.getElementById('lista-mensagens')
-    if (!data || data.length === 0) { div.innerHTML = '<p>Nenhum recado.</p>'; return }
+    if (!data || data.length === 0) { 
+      div.innerHTML = '<p>Nenhum recado deixado ainda.</p>'
+      return 
+    }
 
     div.innerHTML = data.map(m => `
       <div class="card-mensagem">
@@ -330,12 +442,21 @@ async function carregarMensagens() {
         </div>
       </div>
     `).join('')
-  } catch (error) { console.error('Erro mensagens:', error) }
+  } catch (error) { 
+    console.error('Erro ao carregar mensagens:', error) 
+  }
 }
 
 async function deletarMensagem(id) {
-  if(confirm('Excluir mensagem?')) {
-    await supabase.from('mensagens').delete().eq('id', id)
+  if(!confirm('Excluir esta mensagem permanentemente?')) return
+  
+  try {
+    const { error } = await supabase.from('mensagens').delete().eq('id', id)
+    if (error) throw error
+    
     carregarMensagens()
+  } catch (error) {
+    console.error(error)
+    alert('Erro ao excluir mensagem. Verifique se você rodou o código SQL no Supabase para liberar exclusões.')
   }
 }
