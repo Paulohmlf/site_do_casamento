@@ -2,10 +2,9 @@
    ESTILOS DO PAINEL ADMINISTRATIVO
    ======================================== */
 
-/* Layout Geral */
 body {
   background-color: #f4f6f8;
-  font-family: 'Arial', sans-serif;
+  font-family: var(--fonte-secundaria); 
   color: #333;
 }
 

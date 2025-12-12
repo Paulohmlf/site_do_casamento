@@ -64,7 +64,7 @@ a {
    SEÇÃO HERO
    ========================================= */
 .hero {
-  background: linear-gradient(135deg, var(--azul-marinho) 0%, var(--azul-marinho-claro) 100%);
+  background: linear-gradient(135deg, var(--azul-marinho) 0%, var(--azul-marinho-escuro) 100%);
   color: var(--branco);
   text-align: center;
   padding: 100px 20px;
@@ -433,4 +433,14 @@ footer p {
   section {
     padding: 40px 20px;
   }
+}
+/* No final do arquivo css/style.css */
+
+.logo-hero {
+  max-width: 300px; /* Aumentei de 150px para 300px */
+  height: auto;     /* Mantém a proporção correta */
+  margin-bottom: 30px; /* Um pouco mais de espaço em relação ao texto */
+  display: block;
+  margin-left: auto;
+  margin-right: auto; /* Centraliza a imagem */
 }
