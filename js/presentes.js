@@ -1,13 +1,14 @@
 // ========================================
-// LÓGICA DA LISTA DE PRESENTES + PIX
+// LÓGICA DA LISTA DE PRESENTES + PIX + WHATSAPP
 // ========================================
 
 let todosPresentes = []
-let valorPresenteAtual = 0 // Variável para guardar o preço do item selecionado
-const chavePix = "349fb66d-27be-4dd1-90ac-a2bc6ac57041" // Sua chave
+let valorPresenteAtual = 0
+let nomePresenteAtual = "" // Nova variável para a mensagem do Zap
+const chavePix = "349fb66d-27be-4dd1-90ac-a2bc6ac57041"
+const telefoneNoivos = "5587992010698" // Seu número
 const usuarioLogado = JSON.parse(localStorage.getItem('usuario'))
 
-// Carregar presentes ao iniciar
 window.addEventListener('DOMContentLoaded', () => {
   if (!usuarioLogado) {
     window.location.href = 'login.html'
@@ -85,7 +86,7 @@ function filtrarPresentes() {
   exibirPresentes(filtrados)
 }
 
-// === MODAL E PIX ===
+// === MODAL E LÓGICA DE PAGAMENTO ===
 
 function abrirModalReserva(id, nomePresente, valor) {
   document.getElementById('presente-id').value = id
@@ -93,9 +94,13 @@ function abrirModalReserva(id, nomePresente, valor) {
   document.getElementById('presente-valor-texto').textContent = `Valor: R$ ${valor.toFixed(2)}`
   document.getElementById('nome-comprador-modal').textContent = usuarioLogado.nome
   
-  valorPresenteAtual = valor // Salva o valor na variável global
+  valorPresenteAtual = valor
+  nomePresenteAtual = nomePresente // Salva para usar no WhatsApp
 
-  // Reseta o modal para a fase 1
+  // Reseta visual do botão de copiar (caso tenha ficado "Copiado!")
+  const btnCopiar = document.getElementById('btn-copiar')
+  if(btnCopiar) btnCopiar.textContent = '📑 Copiar Código'
+
   document.getElementById('fase-confirmacao').style.display = 'block'
   document.getElementById('fase-pix').style.display = 'none'
   document.getElementById('modal-reserva').style.display = 'flex'
@@ -105,7 +110,6 @@ document.querySelector('.close').addEventListener('click', () => {
   document.getElementById('modal-reserva').style.display = 'none'
 })
 
-// Processar Reserva
 document.getElementById('form-reserva').addEventListener('submit', async function(e) {
   e.preventDefault()
 
@@ -116,7 +120,6 @@ document.getElementById('form-reserva').addEventListener('submit', async functio
   botao.textContent = '⏳ Registrando...'
 
   try {
-    // 1. Salvar no banco
     const { error: erroReserva } = await supabase.from('reservas').insert([{
         presente_id: presenteId,
         nome_comprador: usuarioLogado.nome,
@@ -127,21 +130,15 @@ document.getElementById('form-reserva').addEventListener('submit', async functio
 
     await supabase.from('presentes').update({ reservado: true }).eq('id', presenteId)
 
-    // 2. Gerar PIX
+    // Gerar PIX
     const codigoPix = gerarPayloadPix(chavePix, valorPresenteAtual, "Paulo e Ledja", "Casamento")
     
-    // 3. Atualizar tela do PIX
     document.getElementById('texto-pix').value = codigoPix
-    // Usa API do qrserver para gerar a imagem
     document.getElementById('img-qrcode').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(codigoPix)}`
     
-    // ATUALIZAÇÃO: Link para o botão "Abrir App do Banco"
     const btnBanco = document.getElementById('btn-ir-banco')
-    if(btnBanco) {
-        btnBanco.href = "pix:" + codigoPix
-    }
+    if(btnBanco) btnBanco.href = "pix:" + codigoPix
 
-    // 4. Trocar de tela (Esconde confirmação, Mostra PIX)
     document.getElementById('fase-confirmacao').style.display = 'none'
     document.getElementById('fase-pix').style.display = 'block'
 
@@ -153,52 +150,66 @@ document.getElementById('form-reserva').addEventListener('submit', async functio
   }
 })
 
-// Funções Auxiliares do Modal
+// --- NOVA FUNÇÃO: Feedback Visual de Cópia ---
 function copiarPix() {
   const texto = document.getElementById('texto-pix')
   texto.select()
-  document.execCommand('copy') // Método antigo mas compatível
-  alert('Código PIX copiado! Abra o app do seu banco e escolha "PIX Copia e Cola".')
+  document.execCommand('copy') 
+  
+  // Muda o texto do botão para dar feedback
+  const btn = document.getElementById('btn-copiar')
+  btn.textContent = 'Copiado! ✅'
+  btn.style.backgroundColor = '#4caf50' // Verde temporário
+  btn.style.color = 'white'
+
+  // Volta ao normal depois de 2 segundos
+  setTimeout(() => {
+    btn.textContent = '📑 Copiar Código'
+    btn.style.backgroundColor = '' // Volta ao padrão (secondary/branco)
+    btn.style.color = ''
+  }, 2000)
+}
+
+// --- NOVA FUNÇÃO: Enviar Comprovante no WhatsApp ---
+function enviarComprovante() {
+  const mensagem = `Oi! Acabei de reservar o presente *${nomePresenteAtual}* (R$ ${valorPresenteAtual.toFixed(2)}) e aqui está o comprovante.`
+  const urlWhatsapp = `https://wa.me/${telefoneNoivos}?text=${encodeURIComponent(mensagem)}`
+  
+  // Abre o WhatsApp em nova aba
+  window.open(urlWhatsapp, '_blank')
+  
+  // Fecha o modal e atualiza a lista
+  fecharEAtualizar()
 }
 
 function fecharEAtualizar() {
   document.getElementById('modal-reserva').style.display = 'none'
-  carregarPresentes() // Atualiza a lista no fundo
-  // Opcional: Resetar botão
+  carregarPresentes() 
   document.querySelector('#form-reserva button[type="submit"]').disabled = false
   document.querySelector('#form-reserva button[type="submit"]').textContent = 'Confirmar e Ver PIX 🎁'
 }
 
-// =========================================================
-// GERADOR DE PAYLOAD PIX (BR CODE - EMVCo)
-// =========================================================
+// Gerador PIX (BR Code)
 function gerarPayloadPix(chave, valor, beneficiario = '', cidade = 'BRASIL') {
   const formatarCampo = (id, valor) => {
     const len = valor.length.toString().padStart(2, '0')
     return `${id}${len}${valor}`
   }
-
   const valorString = valor.toFixed(2)
-  
-  // Montagem do Payload
   let payload = 
-    formatarCampo('00', '01') +                           // Payload Format Indicator
-    formatarCampo('26',                                   // Merchant Account Information
+    formatarCampo('00', '01') +
+    formatarCampo('26',
       formatarCampo('00', 'br.gov.bcb.pix') + 
       formatarCampo('01', chave)
     ) +
-    formatarCampo('52', '0000') +                         // Merchant Category Code
-    formatarCampo('53', '986') +                          // Transaction Currency (BRL)
-    formatarCampo('54', valorString) +                    // Transaction Amount
-    formatarCampo('58', 'BR') +                           // Country Code
-    formatarCampo('59', beneficiario || 'NOME') +         // Merchant Name
-    formatarCampo('60', cidade || 'CIDADE') +             // Merchant City
-    formatarCampo('62',                                   // Additional Data Field Template
-      formatarCampo('05', '***')                          // Reference Label
-    ) + 
-    '6304';                                               // CRC16 ID + Length
-
-  // Calcular CRC16
+    formatarCampo('52', '0000') +
+    formatarCampo('53', '986') +
+    formatarCampo('54', valorString) +
+    formatarCampo('58', 'BR') +
+    formatarCampo('59', beneficiario || 'NOME') +
+    formatarCampo('60', cidade || 'CIDADE') +
+    formatarCampo('62', formatarCampo('05', '***')) + 
+    '6304';
   const crc = calcularCRC16(payload)
   return payload + crc
 }
@@ -206,17 +217,12 @@ function gerarPayloadPix(chave, valor, beneficiario = '', cidade = 'BRASIL') {
 function calcularCRC16(payload) {
   let crc = 0xFFFF
   const polynomial = 0x1021
-
   for (let i = 0; i < payload.length; i++) {
     crc ^= payload.charCodeAt(i) << 8
     for (let j = 0; j < 8; j++) {
-      if ((crc & 0x8000) !== 0) {
-        crc = (crc << 1) ^ polynomial
-      } else {
-        crc = crc << 1
-      }
+      if ((crc & 0x8000) !== 0) crc = (crc << 1) ^ polynomial
+      else crc = crc << 1
     }
   }
-  
   return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0')
 }
